@@ -54,8 +54,6 @@ const handler: NextApiHandler<Promise<GetSummaryResponse>> = async (
       );
     }
 
-    //Check if you can still get data from a 400 response
-
     data = await response.json();
 
     if (!response.ok) {

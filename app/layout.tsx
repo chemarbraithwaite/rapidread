@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import MenuIcon from "@/components/icons/menu";
 
@@ -17,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     images: [
       {
-        url: "/images/logo.png",
+        url: "https://chemarbraithwaite.s3.amazonaws.com/logo.png",
         width: 1600,
         height: 446,
         alt: "RapidRead",

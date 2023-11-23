@@ -1,6 +1,5 @@
 "user client";
 
-import { Article } from "@/interfaces";
 import { HTMLMotionProps, motion } from "framer-motion";
 import ChevronLeftIcon from "@/components/icons/chevron-left";
 import { Thread, useArticleStore } from "@/stores/useArticleStore";

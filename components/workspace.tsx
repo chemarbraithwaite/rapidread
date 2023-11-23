@@ -4,7 +4,7 @@ import { useArticleStore } from "@/stores/useArticleStore";
 import useStore from "@/stores/useStore";
 import Thread from "./thread";
 import ChatInput from "@/components/chat-input";
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import EmptyWorkspace from "@/components/empty-workspace";
 import { useAsyncFn } from "react-use";
 import { motion } from "framer-motion";
