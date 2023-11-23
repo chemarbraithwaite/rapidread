@@ -38,38 +38,46 @@ const ArticleDisplay = ({ article }: Props) => {
   };
 
   return (
-    <div key={article.id} className="w-5/6 flex flex-col py-8 gap-4">
-      <div className="w-full flex gap-4 overflow-hidden">
-        <span className="w-[30px] min-w-[30px] h-[30px] flex-2 rounded-full text-white bg-[#05a0f5] flex items-center justify-center">
-          R
-        </span>
-        <div className="flex flex-1 flex-col font-semibold items-start break-all">
-          {"url" in article ? article.url : article.text}
+    <div key={article.id} className="w-5/6 flex flex-col pt-8 gap-6">
+      <div className="w-full flex gap-4 overflow-hidden flex-row-reverse">
+        <span className="w-[30px] min-w-[30px] h-[30px] flex-2 rounded-full text-white bg-[#05a0f5] flex items-center justify-center"></span>
+        <div>
+          <p className="font-semibold pb-2 text-right">You</p>
+          <div
+            className="flex flex-1 flex-col  items-end break-all
+        bg-[#edf2f7] rounded-xl p-4
+        "
+          >
+            {"url" in article ? article.url : article.text}
+          </div>
         </div>
       </div>
       <div key={article.id} className="w-full flex gap-4">
         <Image
           width={30}
           height={30}
-          src={"/images/logo-black.png"}
+          src={"/images/logo-icon.png"}
           alt="logo"
           className="max-h-[30px] max-w-[30px]"
         />
 
-        <div className="p-4 bg-[#edf2f7] rounded-xl flex flex-col">
-          <p>{article?.summary}</p>
-          {hasClipboardAPI && (
-            <div className="flex items-end justify-end ">
-              {isCopied ? (
-                <CheckIcon className="h-6 w-6 mt-2 text-green-400" />
-              ) : (
-                <ClipboardIcon
-                  onClick={handleCopy}
-                  className="h-6 w-6 mt-2 text-gray-400 cursor-pointer"
-                />
-              )}
-            </div>
-          )}
+        <div>
+          <p className="font-semibold pb-2">RapidRead AI</p>
+          <div className="p-4 bg-[#d5e2f0] rounded-xl flex flex-col">
+            <p>{article?.summary}</p>
+            {hasClipboardAPI && (
+              <div className="flex items-end justify-end ">
+                {isCopied ? (
+                  <CheckIcon className="h-6 w-6 mt-2 text-green-400" />
+                ) : (
+                  <ClipboardIcon
+                    onClick={handleCopy}
+                    className="h-6 w-6 mt-2 text-gray-400 cursor-pointer"
+                  />
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import EmptyWorkspace from "@/components/empty-workspace";
 import { useAsyncFn } from "react-use";
 import { motion } from "framer-motion";
+import ArrowDownIcon from "@/components/icons/arrow-down";
 
 const Workspace = () => {
   const threadId = useStore(useArticleStore, (state) => state.activeThreadId);
@@ -28,20 +29,16 @@ const Workspace = () => {
       try {
         if (!input) return true;
 
-        const isUrl = input.trim().startsWith("http");
-        const requestPath = isUrl
-          ? `/api?url=${encodeURIComponent(input)}`
-          : "/api";
         let data = null;
 
-        const res = await fetch(requestPath, {
-          ...(!isUrl && {
-            method: "POST",
-            body: JSON.stringify({ text: input }),
-            headers: {
-              "Content-Type": "application/json",
-            },
+        const res = await fetch("/api", {
+          method: "POST",
+          body: JSON.stringify({
+            text: input,
           }),
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
         data = await res.json();
 
@@ -55,7 +52,7 @@ const Workspace = () => {
       } catch (e: any) {
         console.error(e);
         setError(
-          e?.error || e?.message || "Something went wrong :(. Please try again."
+          e?.error || e?.message || "Oops! Something went wrong. Try again."
         );
         return false;
       }
@@ -71,12 +68,18 @@ const Workspace = () => {
       top: threadRef.current.scrollHeight,
       behavior: behavior,
     });
+    setTimeout(() => {
+      setScrollSnapToBottom(true);
+    }, 500);
   };
 
   useEffect(() => {
+    let ref: HTMLDivElement | null = null;
     const handleScroll = () => {
-      const { scrollHeight, scrollTop, clientHeight } = threadRef.current!;
-      const isAtBottom = scrollHeight - scrollTop === clientHeight;
+      if (!ref) return;
+
+      const { scrollHeight, scrollTop, clientHeight } = ref;
+      const isAtBottom = scrollHeight - scrollTop - 20 < clientHeight;
       setScrollSnapToBottom(isAtBottom);
     };
     setError("");
@@ -85,9 +88,15 @@ const Workspace = () => {
       setScrollSnapToBottom(true);
     }, 500);
 
-    threadRef.current?.addEventListener("scroll", handleScroll);
-    return () => threadRef.current?.removeEventListener("scroll", handleScroll);
-  }, [threadId]);
+    if (threadRef.current) {
+      ref = threadRef.current;
+      ref.addEventListener("scroll", handleScroll);
+    }
+
+    return () => {
+      if (ref) ref?.removeEventListener("scroll", handleScroll);
+    };
+  }, [threadId, hasRehydrated]);
 
   useEffect(() => {
     if (!scrollSnapToBottom) return;
@@ -118,7 +127,18 @@ const Workspace = () => {
         }}
       >
         {!workspaceIsEmpty ? (
-          <Thread id={thread.id} articles={thread.articles} />
+          <>
+            <Thread id={thread.id} articles={thread.articles} />
+            {!scrollSnapToBottom && (
+              <div
+                className="flex justify-center absolute bottom-36 items-center 
+              cursor-pointer w-8 h-8 opacity-50 rounded-full bg-black text-white shadow-md"
+                onClick={() => scrollToBottom()}
+              >
+                <ArrowDownIcon className="w-6 h-6 font-bold" />
+              </div>
+            )}
+          </>
         ) : (
           <EmptyWorkspace
             className="h-full w-5/6 flex overflow-hidden items-center justify-center flex-col
@@ -140,7 +160,7 @@ const Workspace = () => {
           </motion.p>
         )}
         {error && (
-          <div className="w-full font-extralight flex justify-center text-red-500 items-center">
+          <div className="font-extralight  w-4/5 flex justify-center text-red-500 items-center">
             {error}
           </div>
         )}

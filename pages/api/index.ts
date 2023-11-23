@@ -1,14 +1,28 @@
 import { Article } from "@/interfaces";
+import { extract } from "@extractus/article-extractor";
 import { NextApiRequest, NextApiResponse, NextApiHandler } from "next";
 const { v4: uuid4 } = require("uuid");
 
 type GetSummaryResponse = Article | { error: string };
 
+const getTextFromUrl = async (url: string) => {
+  const article = await extract(url.trim());
+
+  if (!article || !article.content) {
+    throw new Error(
+      "Unable to retrieve content from the given URL. Consider using an alternative URL."
+    );
+  }
+
+  const text = article.content.replace(/<[^>]+>/g, "");
+  return text;
+};
+
 const handler: NextApiHandler<Promise<GetSummaryResponse>> = async (
   req: NextApiRequest,
   res: NextApiResponse
 ) => {
-  if (req.method !== "POST" && req.method !== "GET")
+  if (req.method !== "POST")
     return res.status(400).json({ error: "Invalid request" });
   if (!process.env.API_KEY)
     return res.status(500).json({ error: "Server error" });
@@ -16,63 +30,76 @@ const handler: NextApiHandler<Promise<GetSummaryResponse>> = async (
   try {
     let response: Response;
     let data: any;
+    let input: string;
     const { text } = req?.body;
-    const { url } = req?.query;
 
-    if (req.method === "POST") {
-      if (!text) return res.status(400).json({ error: "No text provided" });
+    if (!text) return res.status(400).json({ error: "No input provided" });
+    input = text;
 
-      response = await fetch(
-        "https://article-extractor-and-summarizer.p.rapidapi.com/summarize-text",
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "X-RapidAPI-Key": process.env.API_KEY,
-            "X-RapidAPI-Host":
-              "article-extractor-and-summarizer.p.rapidapi.com",
-          },
-          body: JSON.stringify({
-            text: text,
-            lang: "en",
-          }),
-        }
-      );
-    } else {
-      if (!url) return res.status(400).json({ error: "No url provided" });
+    const isUrl = text.trim().startsWith("http");
 
-      response = await fetch(
-        `https://article-extractor-and-summarizer.p.rapidapi.com/summarize?url=${url}`,
-        {
-          method: "GET",
-          headers: {
-            "X-RapidAPI-Key": process.env.API_KEY,
-            "X-RapidAPI-Host":
-              "article-extractor-and-summarizer.p.rapidapi.com",
-          },
-        }
-      );
+    if (isUrl) {
+      input = await getTextFromUrl(text);
     }
+
+    response = await fetch(
+      "https://chatgpt-best-price.p.rapidapi.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "X-RapidAPI-Key": process.env.API_KEY,
+          "X-RapidAPI-Host": "chatgpt-best-price.p.rapidapi.com",
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are an assistant that can take an article and summarize it.",
+            },
+            {
+              role: "user",
+              content: `Can you summarize this: ${input}`,
+            },
+          ],
+        }),
+      }
+    );
 
     data = await response.json();
 
     if (!response.ok) {
-      return res
-        .status(response.status)
-        .json({ error: data?.error || data?.message || "Invalid request" });
+      console.log(response.status, data);
+      return res.status(response.status).json({
+        error:
+          data?.error ||
+          data?.message ||
+          "Oops. That wasn't suppose to happen. Let's try that again",
+      });
     }
 
-    const article = {
-      id: uuid4(),
-      summary: data.summary,
-      url,
-      text,
-    };
+    let article: Article;
+
+    try {
+      article = {
+        id: uuid4(),
+        summary: data.choices?.[0]?.message?.content,
+        url: isUrl ? text : undefined,
+        text: isUrl ? undefined : text,
+      };
+    } catch (error) {
+      console.log(error, data);
+      throw new Error(
+        "Oops. That wasn't suppose to happen. Let's try that again"
+      );
+    }
 
     return res.status(200).json(article);
-  } catch (error) {
+  } catch (error: any) {
     console.log(error);
-    return res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: error?.message || "Server error" });
   }
 };
 

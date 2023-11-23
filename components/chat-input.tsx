@@ -1,6 +1,7 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import PaperAirplaneIcon from "./icons/paper-airplane";
+import { isMobile } from "react-device-detect";
 
 const CHARACTERS_LIMIT = 10000;
 
@@ -24,19 +25,14 @@ const ChatInput = ({ handleSubmit, ...props }: Props) => {
       })
       .finally(() => {
         setIsLoading(false);
-        inputRef.current?.focus();
-        inputRef.current?.setSelectionRange(0, 0);
+        if (!isMobile) {
+          //Only focus on desktop
+          setTimeout(() => {
+            inputRef.current?.focus();
+          }, 500);
+        }
       });
   };
-
-  useEffect(() => {
-    const setFocus = () => {
-      inputRef.current?.focus();
-    };
-    window.addEventListener("keydown", setFocus);
-
-    return () => window.removeEventListener("keydown", setFocus);
-  });
 
   return (
     <div {...props}>
@@ -52,7 +48,7 @@ const ChatInput = ({ handleSubmit, ...props }: Props) => {
         <textarea
           ref={inputRef}
           className="h-full outline-none
-           w-full resize-none peer placeholder:self-center"
+           w-full resize-none peer placeholder:self-center disabled:bg-transparent"
           value={input}
           disabled={isLoading}
           rows={3}

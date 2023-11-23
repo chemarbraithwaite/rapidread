@@ -13,7 +13,6 @@ const Thread = ({ articles, id }: Thread) => {
     >
       {articles.map((article) => (
         <div className="flex flex-col items-center" key={article.id}>
-          <hr className="w-5/6" />
           <ArticleDisplay key={article.id} article={article} />
         </div>
       ))}
