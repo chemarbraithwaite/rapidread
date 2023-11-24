@@ -43,7 +43,9 @@ const Workspace = () => {
         });
 
         if (res.status === 504) {
-          throw new Error(GENERIC_ERROR_MESSAGE);
+          throw new Error(
+            "Oops! Looks like the request timed out. Let's try that again 🙂."
+          );
         }
 
         data = await res.json();
