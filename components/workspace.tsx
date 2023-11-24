@@ -9,6 +9,7 @@ import EmptyWorkspace from "@/components/empty-workspace";
 import { useAsyncFn } from "react-use";
 import { motion } from "framer-motion";
 import ArrowDownIcon from "@/components/icons/arrow-down";
+import { GENERIC_ERROR_MESSAGE } from "@/constants";
 
 const Workspace = () => {
   const threadId = useStore(useArticleStore, (state) => state.activeThreadId);
@@ -40,6 +41,11 @@ const Workspace = () => {
             "Content-Type": "application/json",
           },
         });
+
+        if (res.status === 504) {
+          throw new Error(GENERIC_ERROR_MESSAGE);
+        }
+
         data = await res.json();
 
         if (res.status !== 200) {
@@ -51,9 +57,7 @@ const Workspace = () => {
         return true;
       } catch (e: any) {
         console.error(e);
-        setError(
-          e?.error || e?.message || "Oops! Something went wrong. Try again."
-        );
+        setError(e?.error || e?.message || GENERIC_ERROR_MESSAGE);
         return false;
       }
     },

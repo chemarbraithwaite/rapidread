@@ -2,8 +2,7 @@
 import { useState, useRef } from "react";
 import PaperAirplaneIcon from "./icons/paper-airplane";
 import { isMobile } from "react-device-detect";
-
-const CHARACTERS_LIMIT = 10000;
+import { CHARACTER_LIMIT } from "@/constants";
 
 type Props = {
   handleSubmit: (input: string) => Promise<boolean>;
@@ -54,7 +53,7 @@ const ChatInput = ({ handleSubmit, ...props }: Props) => {
           rows={3}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          onChange={(e) => setInput(e.target.value.slice(0, CHARACTERS_LIMIT))}
+          onChange={(e) => setInput(e.target.value.slice(0, CHARACTER_LIMIT))}
           placeholder={
             isLoading
               ? "RapidRead is generating your summary"

@@ -1,3 +1,4 @@
+import { GENERIC_ERROR_MESSAGE } from "@/constants";
 import { Article } from "@/interfaces";
 import { extract } from "@extractus/article-extractor";
 import { NextApiRequest, NextApiResponse, NextApiHandler } from "next";
@@ -73,10 +74,7 @@ const handler: NextApiHandler<Promise<GetSummaryResponse>> = async (
     if (!response.ok) {
       console.log(response.status, data);
       return res.status(response.status).json({
-        error:
-          data?.error ||
-          data?.message ||
-          "Oops. That wasn't suppose to happen. Let's try that again",
+        error: data?.error || data?.message || GENERIC_ERROR_MESSAGE,
       });
     }
 
@@ -91,9 +89,7 @@ const handler: NextApiHandler<Promise<GetSummaryResponse>> = async (
       };
     } catch (error) {
       console.log(error, data);
-      throw new Error(
-        "Oops. That wasn't suppose to happen. Let's try that again"
-      );
+      throw new Error(GENERIC_ERROR_MESSAGE);
     }
 
     return res.status(200).json(article);
