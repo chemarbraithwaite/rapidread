@@ -7,30 +7,24 @@ import { CHARACTER_LIMIT } from "@/constants";
 type Props = {
   handleSubmit: (input: string) => Promise<boolean>;
   className?: string;
+  isLoading?: boolean;
 };
 
-const ChatInput = ({ handleSubmit, ...props }: Props) => {
+const ChatInput = ({ handleSubmit, isLoading, ...props }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const onSubmit = () => {
     if (!input.trim()) return;
-    setIsLoading(true);
-    handleSubmit(input.trim())
-      .then((success) => {
-        if (success) setInput("");
-      })
-      .finally(() => {
-        setIsLoading(false);
-        if (!isMobile) {
-          //Only focus on desktop
-          setTimeout(() => {
-            inputRef.current?.focus();
-          }, 500);
-        }
-      });
+    handleSubmit(input.trim());
+    setInput("");
+    if (!isMobile) {
+      //Only focus on desktop
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 500);
+    }
   };
 
   return (

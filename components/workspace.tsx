@@ -7,7 +7,6 @@ import ChatInput from "@/components/chat-input";
 import { useEffect, useRef, useState } from "react";
 import EmptyWorkspace from "@/components/empty-workspace";
 import { useAsyncFn } from "react-use";
-import { motion } from "framer-motion";
 import ArrowDownIcon from "@/components/icons/arrow-down";
 import { GENERIC_ERROR_MESSAGE } from "@/constants";
 
@@ -22,17 +21,21 @@ const Workspace = () => {
     (state) => state._hasHydrated
   );
   const [error, setError] = useState("");
+  const [input, setInput] = useState("");
   const [scrollSnapToBottom, setScrollSnapToBottom] = useState(true);
+  const [didRetry, setDidRetry] = useState(false);
 
   const [{ loading }, getSummary] = useAsyncFn(
     async (input: string) => {
       setError("");
+      setInput(input);
       try {
         if (!input) return true;
 
         let data = null;
+        let res: Response | null = null;
 
-        const res = await fetch("/api", {
+        res = await fetch("/api", {
           method: "POST",
           body: JSON.stringify({
             text: input,
@@ -43,31 +46,43 @@ const Workspace = () => {
         });
 
         if (res.status === 504) {
-          throw new Error(
-            "Oops! Looks like the request timed out. Let's try that again 🙂."
-          );
+          setDidRetry(true);
+
+          // Retry automatically: Server cold start or timeout due to no-premium plan
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Use a delay to prevent spamming the server
+          res = await fetch("/api", {
+            method: "POST",
+            body: JSON.stringify({
+              text: input,
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
         }
 
         data = await res.json();
 
         if (res.status !== 200) {
-          console.log(data);
           throw new Error(data?.error);
         }
 
         addArticle(data);
+        setInput("");
         return true;
       } catch (e: any) {
         console.error(e);
         setError(e?.error || e?.message || GENERIC_ERROR_MESSAGE);
         return false;
+      } finally {
+        setDidRetry(false);
       }
     },
     [addArticle]
   );
 
-  const workspaceIsEmpty =
-    !thread || (thread.articles.length === 0 && !loading && !error);
+  const isThreadActive =
+    (thread && thread.articles.length !== 0) || input !== "";
 
   const scrollToBottom = (behavior: "smooth" | "instant" = "smooth") => {
     threadRef.current?.scrollTo({
@@ -90,6 +105,7 @@ const Workspace = () => {
     };
     setError("");
     scrollToBottom("instant");
+    setInput("");
     setTimeout(() => {
       setScrollSnapToBottom(true);
     }, 500);
@@ -124,7 +140,7 @@ const Workspace = () => {
         ref={threadRef}
         className="overflow-auto max-w-4xl  w-full flex flex-col items-center"
         style={{
-          ...(!workspaceIsEmpty
+          ...(isThreadActive
             ? { height: "100%" }
             : {
                 marginTop: "30vh",
@@ -132,9 +148,19 @@ const Workspace = () => {
               }),
         }}
       >
-        {!workspaceIsEmpty ? (
+        {isThreadActive ? (
           <>
-            <Thread id={thread.id} articles={thread.articles} />
+            <Thread
+              id={thread?.id ?? "active-thread"}
+              articles={thread?.articles ?? []}
+              activeRequest={{
+                text: input,
+                loading,
+                error,
+              }}
+              getSummary={getSummary}
+              didRetry={didRetry}
+            />
             {!scrollSnapToBottom && (
               <div
                 className="flex justify-center absolute bottom-36 items-center 
@@ -151,28 +177,10 @@ const Workspace = () => {
             typewriter"
           />
         )}
-        {loading && (
-          <motion.p
-            animate={{ opacity: 0.5 }}
-            initial={{ opacity: 1 }}
-            transition={{
-              duration: 1,
-              repeat: Infinity,
-              repeatType: "reverse",
-            }}
-            className="flex justify-center text-xl font-semibold items-center text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90%"
-          >
-            Working on your summary...
-          </motion.p>
-        )}
-        {error && (
-          <div className="font-extralight  w-4/5 flex justify-center text-red-500 items-center">
-            {error}
-          </div>
-        )}
       </div>
       <ChatInput
         handleSubmit={getSummary}
+        isLoading={loading}
         className="h-36 w-full p-7 max-w-4xl flex flex-col justify-center"
       />
     </section>

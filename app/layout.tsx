@@ -46,6 +46,7 @@ export default function RootLayout({
               width={107}
               alt="RapidRead"
               className="h-8"
+              priority
             />
           </div>
         </nav>

@@ -8,7 +8,7 @@ import { useMedia } from "react-use";
 const MenuIcon = ({ ...props }) => {
   const toggleMenu = useLayoutStore((state) => state.toggleMenu);
 
-  const isLargeDevice = useMedia("(min-width: 768px)");
+  const isLargeDevice = useMedia("(min-width: 768px)", true);
 
   useEffect(() => {
     const isLargeDevice = window.innerWidth >= 768;

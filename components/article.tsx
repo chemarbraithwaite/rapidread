@@ -1,14 +1,17 @@
 import { Article } from "@/interfaces";
 import Image from "next/image";
 import ClipboardIcon from "@/components/icons/clipboard";
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import CheckIcon from "./icons/check";
+import ErrorIcon from "./icons/error";
 
 type Props = {
   article: Article;
+  altSummary?: ReactNode;
+  error?: boolean;
 };
 
-const ArticleDisplay = ({ article }: Props) => {
+const ArticleDisplay = ({ article, altSummary, error }: Props) => {
   const [isCopied, setIsCopied] = useState(false);
   const [isCopiedTimeout, setIsCopiedTimeout] = useState<NodeJS.Timeout | null>(
     null
@@ -62,20 +65,30 @@ const ArticleDisplay = ({ article }: Props) => {
         />
 
         <div>
-          <p className="font-semibold pb-2">RapidRead AI</p>
-          <div className="p-4 bg-[#d5e2f0] rounded-xl flex flex-col">
-            <p>{article?.summary}</p>
-            {hasClipboardAPI && (
-              <div className="flex items-end justify-end ">
-                {isCopied ? (
-                  <CheckIcon className="h-6 w-6 mt-2 text-green-400" />
-                ) : (
-                  <ClipboardIcon
-                    onClick={handleCopy}
-                    className="h-6 w-6 mt-2 text-gray-400 cursor-pointer"
-                  />
+          <p className="font-semibold pb-2 flex gap-2">
+            RapidRead AI
+            {error && <ErrorIcon className="w-6 h-6 text-red-600" />}
+          </p>
+
+          <div className={"p-4 bg-[#d5e2f0] rounded-xl flex flex-col"}>
+            {altSummary ? (
+              altSummary
+            ) : (
+              <>
+                <p>{article?.summary}</p>
+                {hasClipboardAPI && (
+                  <div className="flex items-end justify-end ">
+                    {isCopied ? (
+                      <CheckIcon className="h-6 w-6 mt-2 text-green-400" />
+                    ) : (
+                      <ClipboardIcon
+                        onClick={handleCopy}
+                        className="h-6 w-6 mt-2 text-gray-400 cursor-pointer"
+                      />
+                    )}
+                  </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         </div>
