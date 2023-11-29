@@ -51,7 +51,7 @@ const ChatInput = ({ handleSubmit, isLoading, ...props }: Props) => {
           placeholder={
             isLoading
               ? "RapidRead is generating your summary"
-              : "Enter the text your want to summarize or a link to a webpage"
+              : "Enter text, a link or a statement. Eg. 'Tell me about Bjork'"
           }
           onKeyDown={(e) => {
             if (isLoading) {
